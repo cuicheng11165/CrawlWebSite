@@ -92,18 +92,18 @@ namespace CrawlWebSite
             }
         }
 
+        object dic = new object();
         public void AddSuccessfulUrl(string url, string keyword)
         {
             UsedDictionary[url] = keyword;
-            if (UsedDictionary.Count > itemthresold)
+            lock (dic)
             {
-                var task = new Task(delegate
+                if (UsedDictionary.Count > itemthresold)
                 {
                     Console.WriteLine("Insert {0} items into successful items", itemthresold);
                     SqlHelper.InserToSuccessfulWeb(UsedDictionary);
                     UsedDictionary.Clear();
-                });
-                task.Start();
+                }
             }
         }
 
@@ -116,13 +116,14 @@ namespace CrawlWebSite
                     UrlQueue.Add(url);
                 }
 
-                if (UrlQueue.Count > 10000)
+                if (UrlQueue.Count > 1000)
                 {
                     //var t = Task.Factory.StartNew(delegate
                     //{
                     Console.WriteLine("Insert {0} items into cache items", itemthresold);
-                    SqlHelper.InsertToCacheWeb(UrlQueue);
-                    UrlQueue.RemoveRange(0, UrlQueue.Count);
+                    var insertCount = UrlQueue.Count / 2;
+                    SqlHelper.InsertToCacheWeb(UrlQueue.Take(insertCount));
+                    UrlQueue.RemoveRange(0, insertCount);
                     //});
                     //t.Wait();
 
@@ -134,15 +135,23 @@ namespace CrawlWebSite
 
         public string Dequeue()
         {
-            while (UrlQueue.Count == 0)
-            {
-                Thread.Sleep(5000);
-            }
+
             lock (queuesync)
             {
+                string result;
+                if (UrlQueue.Count == 0)
+                {
 
-                var result = UrlQueue[UrlQueue.Count - 1];
-                UrlQueue.RemoveAt(UrlQueue.Count - 1);
+                    if (SqlHelper.TryPopFromCacheWeb(out result))
+                    {
+
+                    }
+                }
+                else
+                {
+                    result = UrlQueue[UrlQueue.Count - 1];
+                    UrlQueue.RemoveAt(UrlQueue.Count - 1);
+                }
                 return result;
             }
         }

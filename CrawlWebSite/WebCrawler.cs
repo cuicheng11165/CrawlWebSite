@@ -101,7 +101,7 @@ namespace CrawlWebSite
 
         internal void Start(string startUrl)
         {
-            Fetch(startUrl);
+            //Fetch(startUrl);
             Go();
         }
 

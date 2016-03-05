@@ -136,6 +136,41 @@ namespace CrawlWebSite
             }
         }
 
+        internal static bool TryPopFromCacheWeb(out string result)
+        {
+            bool found = false;
+            try
+            {
+                result = "";
+                using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
+                {
+                    conn.Open();
+                    var cmd = conn.CreateCommand();
+                    cmd.CommandText = "select top 1 * from CacheWeb";
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            result = reader.GetString(0);
+                            found = true;
+                        }
+                    }
+                    if (found)
+                    {
+                        var cmdDelete = conn.CreateCommand();
+                        cmdDelete.CommandText = "delete from CacheWeb where Url =@v1";
+                        cmdDelete.Parameters.AddWithValue("@v1", result);
+                        cmdDelete.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+            return found;
+        }
+
         internal static void InsertToCacheWeb(IEnumerable<string> urls)
         {
             try
