@@ -60,20 +60,23 @@ namespace CrawlWebSite
                 var metaNodes = doc.DocumentNode.SelectNodes("/html/head/meta");
 
                 StringBuilder sb = new StringBuilder();
-                foreach (var node in metaNodes)
+                if (metaNodes != null)
                 {
-                    var name = node.GetAttributeValue("name", "NotFound");
-                    var content = node.GetAttributeValue("content", "NotFound");
-
-                    if (string.Equals(name, "NotFound") || string.Equals(content, "NotFound"))
+                    foreach (var node in metaNodes)
                     {
-                        continue;
-                    }
+                        var name = node.GetAttributeValue("name", "NotFound");
+                        var content = node.GetAttributeValue("content", "NotFound");
 
-                    sb.Append(name);
-                    sb.Append(":");
-                    sb.Append(content);
-                    sb.Append("  ");
+                        if (string.Equals(name, "NotFound") || string.Equals(content, "NotFound"))
+                        {
+                            continue;
+                        }
+
+                        sb.Append(name);
+                        sb.Append(":");
+                        sb.Append(content);
+                        sb.Append("  ");
+                    }
                 }
 
                 this.container.AddSuccessfulUrl(newUrl, sb.ToString());
@@ -143,7 +146,7 @@ namespace CrawlWebSite
                 {
                     this.Fetch(resultUrl);
                 });
-                //task.Wait();
+                task.Wait();
             }
 
         }

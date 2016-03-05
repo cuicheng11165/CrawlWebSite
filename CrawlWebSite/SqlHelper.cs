@@ -12,43 +12,39 @@ namespace CrawlWebSite
     {
         const string sqlconnectionstring = @"Data Source=.\s2012;Initial Catalog=WebCrawler;Integrated Security=true";
 
-        public static void InsertToFailedWeb(IDictionary<string, string> urls)
+        public static void InsertToFailedWeb(string url, string errorMessage)
         {
-            try
+            using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
             {
-                using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
-                {
-                    conn.Open();
+                conn.Open();
 
-                    var tran = conn.BeginTransaction();
-                    var cmd = conn.CreateCommand();
-                    cmd.Transaction = tran;
+                var tran = conn.BeginTransaction();
+                var cmd = conn.CreateCommand();
+                cmd.Transaction = tran;
 
-                    foreach (var item in urls)
-                    {
-                        Uri uri = new Uri(item.Key);
-                        var domains = uri.Host.Split('.');
-                        cmd.CommandText = "Insert into FailedWeb (PrimaryDomain,FailedUrl,ErrorMessage) values(@v1,@v2,@v3)";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
-                        cmd.Parameters.AddWithValue("@v2", item.Key);
-                        cmd.Parameters.AddWithValue("@v3", item.Value);
-                        cmd.ExecuteNonQuery();
-                    }
-                    tran.Commit();
+                Uri uri = new Uri(url);
+                var domains = uri.Host.Split('.');
 
-                }
-            }
-            catch (Exception e)
-            {
-                throw;
+                cmd.CommandText = @"begin tran
+if not exists (select * from FailedWeb with (updlock,serializable) where FailedUrl = '@v2')
+begin
+   insert into FailedWeb (PrimaryDomain,FailedUrl,ErrorMessage)
+   values ('@v1','@v2','@v3')
+end
+commit tran";
+
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                cmd.Parameters.AddWithValue("@v2", url);
+                cmd.Parameters.AddWithValue("@v3", errorMessage);
+                cmd.ExecuteNonQuery();
+                tran.Commit();
+
             }
         }
 
-        internal static bool TrySelectFromFailedWeb(string url, out string errorMessage)
+        internal static bool TrySelectFromFailedWeb(string url)
         {
-            errorMessage = "";
-
             using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
             {
                 conn.Open();
@@ -64,100 +60,79 @@ namespace CrawlWebSite
                 {
                     while (reader.Read())
                     {
-                        errorMessage = reader.GetString(2);
                         return true;
                     }
                 }
                 return false;
             }
-
         }
 
         internal static bool HasSuccessfulDomain(string newUrl)
         {
-            bool result;
-            try
+            using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
             {
-                using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
-                {
-                    conn.Open();
-                    var cmd = conn.CreateCommand();
-                    Uri uri = new Uri(newUrl);
-                    var domains = uri.Host.Split('.');
-                    cmd.CommandText = "select count(*) from SuccessfulWeb where PrimaryDomain=@v1";
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
-                    var rowcount = (int)cmd.ExecuteScalar();
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                Uri uri = new Uri(newUrl);
+                var domains = uri.Host.Split('.');
+                cmd.CommandText = "select count(*) from SuccessfulWeb where PrimaryDomain=@v1";
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                var rowcount = (int)cmd.ExecuteScalar();
 
-                    return rowcount > 0;
-                }
-            }
-            catch (Exception e)
-            {
-                throw;
+                return rowcount > 0;
             }
         }
 
-        internal static void InserToSuccessfulWeb(IDictionary<string, string> usedDictionary)
+        internal static void InserToSuccessfulWeb(string url, string keyword)
         {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
-                {
-                    conn.Open();
 
-                    var tran = conn.BeginTransaction();
-                    var cmd = conn.CreateCommand();
-                    cmd.Transaction = tran;
-
-                    foreach (var item in usedDictionary)
-                    {
-                        Uri uri = new Uri(item.Key);
-                        var domains = uri.Host.Split('.');
-                        cmd.CommandText = "Insert into SuccessfulWeb (PrimaryDomain,Url,Keyword) values(@v1,@v2,@v3)";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
-                        cmd.Parameters.AddWithValue("@v2", item.Key);
-                        cmd.Parameters.AddWithValue("@v3", item.Value);
-                        cmd.ExecuteNonQuery();
-                    }
-                    tran.Commit();
-                }
-            }
-            catch (Exception e)
+            using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
             {
-                throw;
+                conn.Open();
+
+                var tran = conn.BeginTransaction();
+                var cmd = conn.CreateCommand();
+                cmd.Transaction = tran;
+
+                Uri uri = new Uri(url);
+                var domains = uri.Host.Split('.');
+                cmd.CommandText = @"begin tran
+if not exists(select * from SuccessfulWeb with (updlock, serializable) where FailedUrl = '@v2')
+begin
+   insert into FailedWeb (PrimaryDomain, Url, Keyword)
+   values('@v1', '@v2', '@v3')
+end
+commit tran";
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                cmd.Parameters.AddWithValue("@v2", url);
+                cmd.Parameters.AddWithValue("@v3", keyword);
+                cmd.ExecuteNonQuery();
+                tran.Commit();
             }
+
         }
 
-        internal static bool TrySelectFromSuccessfulWeb(string url, out string result)
+        internal static bool TrySelectFromSuccessfulWeb(string url)
         {
-            try
+            using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
             {
-                using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
-                {
-                    conn.Open();
-                    var cmd = conn.CreateCommand();
-                    Uri uri = new Uri(url);
-                    var domains = uri.Host.Split('.');
-                    cmd.CommandText = "select * from SuccessfulWeb where PrimaryDomain=@v1 and Url=@v2";
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
-                    cmd.Parameters.AddWithValue("@v2", url);
-                    var reader = cmd.ExecuteReader();
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                Uri uri = new Uri(url);
+                var domains = uri.Host.Split('.');
+                cmd.CommandText = "select * from SuccessfulWeb where PrimaryDomain=@v1 and Url=@v2";
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                cmd.Parameters.AddWithValue("@v2", url);
+                var reader = cmd.ExecuteReader();
 
-                    while (reader.Read())
-                    {
-                        result = reader.GetString(2);
-                        return true;
-                    }
-                    result = "";
-                    return false;
+                while (reader.Read())
+                {
+                    return true;
                 }
-            }
-            catch (Exception e)
-            {
-                throw;
+                return false;
             }
         }
 
@@ -198,34 +173,27 @@ namespace CrawlWebSite
 
         internal static void InsertToCacheWeb(IEnumerable<string> urls)
         {
-            try
+            using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
             {
-                using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
+                conn.Open();
+
+                var tran = conn.BeginTransaction();
+                var cmd = conn.CreateCommand();
+                cmd.Transaction = tran;
+
+                foreach (var item in urls)
                 {
-                    conn.Open();
 
-                    var tran = conn.BeginTransaction();
-                    var cmd = conn.CreateCommand();
-                    cmd.Transaction = tran;
-
-                    foreach (var item in urls)
-                    {
-
-                        Uri uri = new Uri(item);
-                        var domains = uri.Host.Split('.');
-                        cmd.CommandText = "Insert into CacheWeb (PrimaryDomain,Url) values(@v1,@v2)";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
-                        cmd.Parameters.AddWithValue("@v2", item);
-                        cmd.ExecuteNonQuery();
-                    }
-                    tran.Commit();
-
+                    Uri uri = new Uri(item);
+                    var domains = uri.Host.Split('.');
+                    cmd.CommandText = "Insert into CacheWeb (PrimaryDomain,Url) values(@v1,@v2)";
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                    cmd.Parameters.AddWithValue("@v2", item);
+                    cmd.ExecuteNonQuery();
                 }
-            }
-            catch (Exception e)
-            {
-                throw;
+                tran.Commit();
+
             }
         }
     }

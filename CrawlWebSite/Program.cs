@@ -15,7 +15,7 @@ namespace CrawlWebSite
         {
             ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => true;
 
-            string starturl = "http://help.10010.com";
+            string starturl = "http://g.360.cn";
             WebCrawler crawl = new WebCrawler();
             crawl.Start(starturl);
 
