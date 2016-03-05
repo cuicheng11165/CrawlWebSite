@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,8 +15,12 @@ namespace CrawlWebSite
     {
         CrawlerContainer container = new CrawlerContainer();
 
-        public void Fetch(string url)
+        public void Fetch(string url, string encoding = "utf-8")
         {
+            if (string.IsNullOrEmpty(url))
+            {
+                return;
+            }
             var uriInstance = new Uri(url);
 
             var newUrl = string.Format("{0}://{1}", uriInstance.Scheme, uriInstance.Host);
@@ -44,7 +49,13 @@ namespace CrawlWebSite
                 var reader = webclient.OpenRead(url);
 
                 HtmlDocument doc = new HtmlDocument();
-                doc.Load(reader, Encoding.UTF8);
+                doc.Load(reader, Encoding.GetEncoding(encoding));
+
+                if (doc.DeclaredEncoding != null && !string.Equals(doc.DeclaredEncoding.BodyName, Encoding.GetEncoding(encoding).BodyName))
+                {
+                    Fetch(url, doc.DeclaredEncoding.BodyName);
+                    return;
+                }
 
                 var metaNodes = doc.DocumentNode.SelectNodes("/html/head/meta");
 
@@ -69,39 +80,53 @@ namespace CrawlWebSite
 
 
                 var anchors = doc.DocumentNode.SelectNodes("//a");
-
-                const string defaultValue = "NotFound";
-
-                foreach (var ele in anchors)
+                if (anchors != null)
                 {
-                    var href = ele.GetAttributeValue("href", defaultValue);
-                    if (string.Equals(href, defaultValue))
+                    const string defaultValue = "NotFound";
+
+                    foreach (var ele in anchors)
                     {
-                        continue;
+                        var href = ele.GetAttributeValue("href", defaultValue);
+                        if (string.Equals(href, defaultValue))
+                        {
+                            continue;
+                        }
+                        if (!href.StartsWith("http"))
+                        {
+                            continue;
+                        }
+
+                        var uri = new Uri(href);
+
+                        var hostdns = uri.Host.Split('.');
+
+
+                        this.container.Enqueue(string.Format("{0}://{1}", uri.Scheme, uri.Host));
                     }
-                    if (!href.StartsWith("http"))
-                    {
-                        continue;
-                    }
-
-                    var uri = new Uri(href);
-
-                    var hostdns = uri.Host.Split('.');
-
-
-                    this.container.Enqueue(string.Format("{0}://{1}", uri.Scheme, uri.Host));
+                }
+            }
+            catch (WebException webex)
+            {
+                if (webex.Response != null && ((System.Net.HttpWebResponse)webex.Response).StatusCode == HttpStatusCode.BadGateway)
+                {
+                    System.Threading.Thread.Sleep(60000);
+                    Fetch(url);
+                }
+                else
+                {
+                    container.AddFailedUrl(url, webex.ToString());
                 }
             }
             catch (Exception e)
             {
-                container.AddFailedUrl(url);
+                container.AddFailedUrl(url, e.ToString());
             }
 
         }
 
         internal void Start(string startUrl)
         {
-            //Fetch(startUrl);
+            Fetch(startUrl);
             Go();
         }
 
@@ -110,6 +135,10 @@ namespace CrawlWebSite
             while (true)
             {
                 var resultUrl = container.Dequeue();
+                if (string.IsNullOrEmpty(resultUrl))
+                {
+                    continue;
+                }
                 var task = Task.Factory.StartNew(delegate
                 {
                     this.Fetch(resultUrl);

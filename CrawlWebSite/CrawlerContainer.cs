@@ -18,7 +18,7 @@ namespace CrawlWebSite
 
         ConcurrentDictionary<string, string> UsedDictionary { set; get; } = new ConcurrentDictionary<string, string>();
 
-        private HashSet<string> failedUrls = new HashSet<string>();
+        private Dictionary<string, string> failedUrls = new Dictionary<string, string>();
 
         ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
         public bool HasFailed(string url)
@@ -28,7 +28,7 @@ namespace CrawlWebSite
 
             try
             {
-                succeed = failedUrls.Contains(url);
+                succeed = failedUrls.ContainsKey(url);
             }
             finally
             {
@@ -38,12 +38,13 @@ namespace CrawlWebSite
 
             if (!succeed)
             {
-                if (SqlHelper.TrySelectFromFailedWeb(url))
+                string errorMessage;
+                if (SqlHelper.TrySelectFromFailedWeb(url, out errorMessage))
                 {
                     rwl.EnterWriteLock();
                     try
                     {
-                        failedUrls.Add(url);
+                        failedUrls[url] = errorMessage;
                     }
                     finally
                     {
@@ -55,6 +56,11 @@ namespace CrawlWebSite
                 }
             }
             return succeed;
+        }
+
+        internal bool EnsurePrimaryDomain(string newUrl)
+        {
+            return SqlHelper.HasSuccessfulDomain(newUrl);
         }
 
         internal bool HasSucceed(string host)
@@ -72,12 +78,12 @@ namespace CrawlWebSite
             return succeed;
         }
 
-        public void AddFailedUrl(string url)
+        public void AddFailedUrl(string url, string errorMessage)
         {
             rwl.EnterWriteLock();
             try
             {
-                failedUrls.Add(url);
+                failedUrls[url] = errorMessage;
                 if (failedUrls.Count > itemthresold)
                 {
                     Console.WriteLine("Insert {0} items into failed items", itemthresold);

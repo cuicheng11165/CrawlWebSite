@@ -12,7 +12,7 @@ namespace CrawlWebSite
     {
         const string sqlconnectionstring = @"Data Source=.\s2012;Initial Catalog=WebCrawler;Integrated Security=true";
 
-        public static void InsertToFailedWeb(IEnumerable<string> urls)
+        public static void InsertToFailedWeb(IDictionary<string, string> urls)
         {
             try
             {
@@ -26,12 +26,13 @@ namespace CrawlWebSite
 
                     foreach (var item in urls)
                     {
-                        Uri uri = new Uri(item);
+                        Uri uri = new Uri(item.Key);
                         var domains = uri.Host.Split('.');
-                        cmd.CommandText = "Insert into FailedWeb (PrimaryDomain,FailedUrl) values(@v1,@v2)";
+                        cmd.CommandText = "Insert into FailedWeb (PrimaryDomain,FailedUrl,ErrorMessage) values(@v1,@v2,@v3)";
                         cmd.Parameters.Clear();
                         cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
-                        cmd.Parameters.AddWithValue("@v2", item);
+                        cmd.Parameters.AddWithValue("@v2", item.Key);
+                        cmd.Parameters.AddWithValue("@v3", item.Value);
                         cmd.ExecuteNonQuery();
                     }
                     tran.Commit();
@@ -44,27 +45,51 @@ namespace CrawlWebSite
             }
         }
 
-        internal static bool TrySelectFromFailedWeb(string url)
+        internal static bool TrySelectFromFailedWeb(string url, out string errorMessage)
         {
+            errorMessage = "";
+
+            using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                Uri uri = new Uri(url);
+                var domains = uri.Host.Split('.');
+
+                cmd.CommandText = "select * from FailedWeb where PrimaryDomain=@v1 and FailedUrl=@v2";
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                cmd.Parameters.AddWithValue("@v2", url);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        errorMessage = reader.GetString(2);
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+        }
+
+        internal static bool HasSuccessfulDomain(string newUrl)
+        {
+            bool result;
             try
             {
                 using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
                 {
                     conn.Open();
                     var cmd = conn.CreateCommand();
-                    Uri uri = new Uri(url);
+                    Uri uri = new Uri(newUrl);
                     var domains = uri.Host.Split('.');
-                    cmd.CommandText = "select * from SuccessfulWeb where PrimaryDomain=@v1 and Url=@v2";
+                    cmd.CommandText = "select count(*) from SuccessfulWeb where PrimaryDomain=@v1";
                     cmd.Parameters.Clear();
                     cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
-                    cmd.Parameters.AddWithValue("@v2", url);
-                    var reader = cmd.ExecuteReader();
+                    var rowcount = (int)cmd.ExecuteScalar();
 
-                    while (reader.Read())
-                    {
-                        return true;
-                    }
-                    return false;
+                    return rowcount > 0;
                 }
             }
             catch (Exception e)
@@ -151,7 +176,7 @@ namespace CrawlWebSite
                     {
                         while (reader.Read())
                         {
-                            result = reader.GetString(0);
+                            result = reader.GetString(1);
                             found = true;
                         }
                     }
@@ -185,11 +210,13 @@ namespace CrawlWebSite
 
                     foreach (var item in urls)
                     {
+
                         Uri uri = new Uri(item);
                         var domains = uri.Host.Split('.');
-                        cmd.CommandText = "Insert into CacheWeb (Url) values(@v1)";
+                        cmd.CommandText = "Insert into CacheWeb (PrimaryDomain,Url) values(@v1,@v2)";
                         cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@v1", item);
+                        cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                        cmd.Parameters.AddWithValue("@v2", item);
                         cmd.ExecuteNonQuery();
                     }
                     tran.Commit();

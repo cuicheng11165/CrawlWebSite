@@ -9,12 +9,14 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[CacheWeb](
+	[PrimaryDomain] [nvarchar](500) NULL,
 	[Url] [nvarchar](500) NULL
 ) ON [PRIMARY]
 
 CREATE TABLE [dbo].[FailedWeb](
 	[PrimaryDomain] [nvarchar](500) NULL,
-	[FailedUrl] [nvarchar](500) NULL
+	[FailedUrl] [nvarchar](500) NULL,
+	[ErrorMessage] [nvarchar](MAX) NULL
 ) ON [PRIMARY]
 
 CREATE TABLE [dbo].[SuccessfulWeb](
