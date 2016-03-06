@@ -16,7 +16,7 @@ namespace CrawlWebSite
             Uri uri = new Uri(url);
             var domains = uri.Host.Split('.');
             string domain;
-            if (domains.Length >= 2)
+            if (domains.Length >= 3)
             {
                 if (string.Equals(domains[domains.Length - 2], "com", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(domains[domains.Length - 2], "edu", StringComparison.OrdinalIgnoreCase) ||

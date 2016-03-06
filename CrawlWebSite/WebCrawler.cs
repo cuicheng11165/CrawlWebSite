@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CrawlWebSite
@@ -140,11 +141,15 @@ namespace CrawlWebSite
                 {
                     continue;
                 }
-                var task = Task.Factory.StartNew(delegate
+                ThreadPool.QueueUserWorkItem(delegate
                 {
+                    //var task = Task.Factory.StartNew(delegate
+                    //{
                     this.Fetch(resultUrl);
+                    //}, TaskCreationOptions.LongRunning);
+                    //task.Wait();
+
                 });
-                //task.Wait();
             }
 
         }

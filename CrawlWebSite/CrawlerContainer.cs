@@ -32,7 +32,7 @@ namespace CrawlWebSite
         }
         public void AddFailedUrl(string url, string errorMessage)
         {
-            Console.WriteLine("Add Failed: {0}", url);
+            Console.WriteLine("Add Failed: {0}, {1}", url, errorMessage);
             SqlHelper.InsertToFailedWeb(url, errorMessage);
         }
 
@@ -51,10 +51,10 @@ namespace CrawlWebSite
                     UrlQueue.Add(url);
                 }
 
-                if (UrlQueue.Count > 200)
+                if (UrlQueue.Count > 5000)
                 {
-                    Console.WriteLine("Insert {0} items into cache items", itemthresold);
                     var insertCount = UrlQueue.Count / 2;
+                    Console.WriteLine("Insert {0} items into cache items", itemthresold);
                     SqlHelper.InsertToCacheWeb(UrlQueue.Take(insertCount));
                     UrlQueue.RemoveRange(0, insertCount);
                 }
