@@ -16,11 +16,6 @@ namespace CrawlWebSite
 
         const int itemthresold = 100;
 
-        //ConcurrentDictionary<string, string> UsedDictionary { set; get; } = new ConcurrentDictionary<string, string>();
-
-        //private Dictionary<string, string> failedUrls = new Dictionary<string, string>();
-
-        ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
         public bool HasFailed(string url)
         {
             return SqlHelper.TrySelectFromFailedWeb(url);
@@ -37,12 +32,13 @@ namespace CrawlWebSite
         }
         public void AddFailedUrl(string url, string errorMessage)
         {
+            Console.WriteLine("Add Failed: {0}", url);
             SqlHelper.InsertToFailedWeb(url, errorMessage);
         }
 
-        object dic = new object();
         public void AddSuccessfulUrl(string url, string keyword)
         {
+            Console.WriteLine("Add Successful: {0}", url);
             SqlHelper.InserToSuccessfulWeb(url, keyword);
         }
 
@@ -55,35 +51,26 @@ namespace CrawlWebSite
                     UrlQueue.Add(url);
                 }
 
-                if (UrlQueue.Count > 1000)
+                if (UrlQueue.Count > 200)
                 {
-                    //var t = Task.Factory.StartNew(delegate
-                    //{
                     Console.WriteLine("Insert {0} items into cache items", itemthresold);
                     var insertCount = UrlQueue.Count / 2;
                     SqlHelper.InsertToCacheWeb(UrlQueue.Take(insertCount));
                     UrlQueue.RemoveRange(0, insertCount);
-                    //});
-                    //t.Wait();
-
                 }
             }
-
-
         }
 
         public string Dequeue()
         {
-
             lock (queuesync)
             {
                 string result;
                 if (UrlQueue.Count == 0)
                 {
-
-                    if (SqlHelper.TryPopFromCacheWeb(out result))
+                    if (!SqlHelper.TryPopFromCacheWeb(out result))
                     {
-
+                        Thread.Sleep(10000);
                     }
                 }
                 else

@@ -10,6 +10,33 @@ namespace CrawlWebSite
 {
     class SqlHelper
     {
+
+        static string GetPrimaryDomain(string url)
+        {
+            Uri uri = new Uri(url);
+            var domains = uri.Host.Split('.');
+            string domain;
+            if (domains.Length >= 2)
+            {
+                if (string.Equals(domains[domains.Length - 2], "com", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(domains[domains.Length - 2], "edu", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(domains[domains.Length - 2], "gov", StringComparison.OrdinalIgnoreCase)
+                    )
+                {
+                    domain = string.Format("{0}.{1}.{2}", domains[domains.Length - 3], domains[domains.Length - 2], domains[domains.Length - 1]);
+                }
+                else
+                {
+                    domain = string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]);
+                }
+            }
+            else
+            {
+                domain = uri.Host;
+            }
+            return domain;
+        }
+
         const string sqlconnectionstring = @"Data Source=.\s2012;Initial Catalog=WebCrawler;Integrated Security=true";
 
         public static void InsertToFailedWeb(string url, string errorMessage)
@@ -22,19 +49,16 @@ namespace CrawlWebSite
                 var cmd = conn.CreateCommand();
                 cmd.Transaction = tran;
 
-                Uri uri = new Uri(url);
-                var domains = uri.Host.Split('.');
-
                 cmd.CommandText = @"begin tran
-if not exists (select * from FailedWeb with (updlock,serializable) where FailedUrl = '@v2')
+if not exists (select * from FailedWeb with (updlock,serializable) where PrimaryDomain=@v1 and FailedUrl = @v2)
 begin
    insert into FailedWeb (PrimaryDomain,FailedUrl,ErrorMessage)
-   values ('@v1','@v2','@v3')
+   values (@v1,@v2,@v3)
 end
 commit tran";
 
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                cmd.Parameters.AddWithValue("@v1", GetPrimaryDomain(url));
                 cmd.Parameters.AddWithValue("@v2", url);
                 cmd.Parameters.AddWithValue("@v3", errorMessage);
                 cmd.ExecuteNonQuery();
@@ -49,12 +73,12 @@ commit tran";
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                Uri uri = new Uri(url);
-                var domains = uri.Host.Split('.');
+
 
                 cmd.CommandText = "select * from FailedWeb where PrimaryDomain=@v1 and FailedUrl=@v2";
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+
+                cmd.Parameters.AddWithValue("@v1", GetPrimaryDomain(url));
                 cmd.Parameters.AddWithValue("@v2", url);
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -95,17 +119,15 @@ commit tran";
                 var cmd = conn.CreateCommand();
                 cmd.Transaction = tran;
 
-                Uri uri = new Uri(url);
-                var domains = uri.Host.Split('.');
                 cmd.CommandText = @"begin tran
-if not exists(select * from SuccessfulWeb with (updlock, serializable) where FailedUrl = '@v2')
+if not exists(select * from SuccessfulWeb with (updlock, serializable) where PrimaryDomain=@v1 and Url = @v2)
 begin
-   insert into FailedWeb (PrimaryDomain, Url, Keyword)
-   values('@v1', '@v2', '@v3')
+   insert into SuccessfulWeb (PrimaryDomain, Url, Keyword)
+   values(@v1, @v2, @v3)
 end
 commit tran";
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                cmd.Parameters.AddWithValue("@v1", GetPrimaryDomain(url));
                 cmd.Parameters.AddWithValue("@v2", url);
                 cmd.Parameters.AddWithValue("@v3", keyword);
                 cmd.ExecuteNonQuery();
@@ -120,11 +142,9 @@ commit tran";
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                Uri uri = new Uri(url);
-                var domains = uri.Host.Split('.');
                 cmd.CommandText = "select * from SuccessfulWeb where PrimaryDomain=@v1 and Url=@v2";
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                cmd.Parameters.AddWithValue("@v1", GetPrimaryDomain(url));
                 cmd.Parameters.AddWithValue("@v2", url);
                 var reader = cmd.ExecuteReader();
 
@@ -183,12 +203,15 @@ commit tran";
 
                 foreach (var item in urls)
                 {
-
-                    Uri uri = new Uri(item);
-                    var domains = uri.Host.Split('.');
-                    cmd.CommandText = "Insert into CacheWeb (PrimaryDomain,Url) values(@v1,@v2)";
+                    cmd.CommandText = @"begin tran
+if not exists(select * from CacheWeb with (updlock, serializable) where PrimaryDomain = @v1 and Url = @v2)
+begin
+   insert into CacheWeb (PrimaryDomain, Url)
+   values(@v1, @v2)
+end
+commit tran";
                     cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@v1", string.Format("{0}.{1}", domains[domains.Length - 2], domains[domains.Length - 1]));
+                    cmd.Parameters.AddWithValue("@v1", GetPrimaryDomain(item));
                     cmd.Parameters.AddWithValue("@v2", item);
                     cmd.ExecuteNonQuery();
                 }

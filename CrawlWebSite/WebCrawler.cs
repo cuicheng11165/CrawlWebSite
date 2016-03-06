@@ -43,8 +43,6 @@ namespace CrawlWebSite
                 //webclient.Headers.Add("Accept-Encoding", "gzip, deflate");
                 webclient.Headers.Add("Host", uriInstance.Host);
                 webclient.Headers.Add("Accept-Language", "zh-Hans-CN,zh-Hans;q=0.8,en-US;q=0.5,en;q=0.3");
-                webclient.Headers.Add("Accept-Charset", "utf-8");
-                webclient.Headers.Add("Content-Type", "text/html; charset=gb2312");
 
                 var reader = webclient.OpenRead(url);
 
@@ -108,18 +106,18 @@ namespace CrawlWebSite
                     }
                 }
             }
-            catch (WebException webex)
-            {
-                if (webex.Response != null && ((System.Net.HttpWebResponse)webex.Response).StatusCode == HttpStatusCode.BadGateway)
-                {
-                    System.Threading.Thread.Sleep(60000);
-                    Fetch(url);
-                }
-                else
-                {
-                    container.AddFailedUrl(url, webex.ToString());
-                }
-            }
+            //catch (WebException webex)
+            //{
+            //    if (webex.Response != null && ((System.Net.HttpWebResponse)webex.Response).StatusCode == HttpStatusCode.BadGateway)
+            //    {
+            //        System.Threading.Thread.Sleep(60000);
+            //        Fetch(url);
+            //    }
+            //    else
+            //    {
+            //        container.AddFailedUrl(url, webex.ToString());
+            //    }
+            //}
             catch (Exception e)
             {
                 container.AddFailedUrl(url, e.ToString());
@@ -129,7 +127,7 @@ namespace CrawlWebSite
 
         internal void Start(string startUrl)
         {
-            Fetch(startUrl);
+            //Fetch(startUrl);
             Go();
         }
 
@@ -146,7 +144,7 @@ namespace CrawlWebSite
                 {
                     this.Fetch(resultUrl);
                 });
-                task.Wait();
+                //task.Wait();
             }
 
         }
