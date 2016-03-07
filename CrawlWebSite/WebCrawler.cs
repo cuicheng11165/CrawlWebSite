@@ -30,10 +30,10 @@ namespace CrawlWebSite
             {
                 return;
             }
-            if (container.HasSucceed(newUrl))
-            {
-                return;
-            }
+            //if (container.HasSucceed(newUrl))
+            //{
+            //    return;
+            //}
 
             try
             {
@@ -128,7 +128,7 @@ namespace CrawlWebSite
 
         internal void Start(string startUrl)
         {
-            //Fetch(startUrl);
+            Fetch(startUrl);
             Go();
         }
 

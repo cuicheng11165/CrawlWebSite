@@ -18,7 +18,7 @@ namespace CrawlWebSite
 
             ThreadPool.SetMaxThreads(100, 100);
 
-            string starturl = "http://www.sina.com.cn/";
+            string starturl = "http://news.baidu.com/";
             WebCrawler crawl = new WebCrawler();
             crawl.Start(starturl);
 
