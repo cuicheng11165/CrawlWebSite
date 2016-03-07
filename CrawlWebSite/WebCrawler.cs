@@ -30,10 +30,10 @@ namespace CrawlWebSite
             {
                 return;
             }
-            //if (container.HasSucceed(newUrl))
-            //{
-            //    return;
-            //}
+            if (container.HasSucceed(newUrl))
+            {
+                return;
+            }
 
             try
             {

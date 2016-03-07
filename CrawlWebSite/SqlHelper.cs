@@ -122,14 +122,19 @@ commit tran";
                 cmd.CommandText = @"begin tran
 if not exists(select * from SuccessfulWeb with (updlock, serializable) where PrimaryDomain=@v1 and Url = @v2)
 begin
-   insert into SuccessfulWeb (PrimaryDomain, Url, Keyword)
-   values(@v1, @v2, @v3)
+   insert into SuccessfulWeb (PrimaryDomain, Url, Keyword,LastAccessTime)
+   values(@v1, @v2, @v3,@v4)
+end
+else
+begin
+   update SuccessfulWeb set LastAccessTime=@v4 where PrimaryDomain=@v1 and Url = @v2
 end
 commit tran";
                 cmd.Parameters.Clear();
                 cmd.Parameters.AddWithValue("@v1", GetPrimaryDomain(url));
                 cmd.Parameters.AddWithValue("@v2", url);
                 cmd.Parameters.AddWithValue("@v3", keyword);
+                cmd.Parameters.AddWithValue("@v4", DateTime.UtcNow);
                 cmd.ExecuteNonQuery();
                 tran.Commit();
             }
@@ -150,7 +155,12 @@ commit tran";
 
                 while (reader.Read())
                 {
-                    return true;
+                    if (!reader.IsDBNull(3))
+                    {
+                        var lastAccessTime = (DateTime)reader[3];
+                        return (DateTime.UtcNow - lastAccessTime) < new TimeSpan(0, 1, 0, 0);
+                    }
+                    return false;
                 }
                 return false;
             }
@@ -159,35 +169,44 @@ commit tran";
         internal static bool TryPopFromCacheWeb(out string result)
         {
             bool found = false;
-            try
+
+            result = "";
+            using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
             {
-                result = "";
-                using (SqlConnection conn = new SqlConnection(sqlconnectionstring))
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = "select top 1 * from CacheWeb";
+                using (var reader = cmd.ExecuteReader())
                 {
-                    conn.Open();
-                    var cmd = conn.CreateCommand();
-                    cmd.CommandText = "select top 1 * from CacheWeb";
-                    using (var reader = cmd.ExecuteReader())
+                    while (reader.Read())
+                    {
+                        result = reader.GetString(1);
+                        found = true;
+                    }
+                }
+                if (found)
+                {
+                    var cmdDelete = conn.CreateCommand();
+                    cmdDelete.CommandText = "delete from CacheWeb where Url =@v1";
+                    cmdDelete.Parameters.AddWithValue("@v1", result);
+                    cmdDelete.ExecuteNonQuery();
+                }
+                else
+                {
+                    var selectCmd = conn.CreateCommand();
+                    selectCmd.CommandText = "select top 1 Url from SuccessfulWeb where LastAccessTime <@v1 or LastAccessTime is null ORDER BY NEWID()";
+                    selectCmd.Parameters.AddWithValue("@v1", DateTime.UtcNow.AddDays(-1));
+                    using (var reader = selectCmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            result = reader.GetString(1);
+                            result = reader.GetString(0);
                             found = true;
                         }
                     }
-                    if (found)
-                    {
-                        var cmdDelete = conn.CreateCommand();
-                        cmdDelete.CommandText = "delete from CacheWeb where Url =@v1";
-                        cmdDelete.Parameters.AddWithValue("@v1", result);
-                        cmdDelete.ExecuteNonQuery();
-                    }
                 }
             }
-            catch (Exception e)
-            {
-                throw;
-            }
+
             return found;
         }
 

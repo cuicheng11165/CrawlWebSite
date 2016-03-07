@@ -15,7 +15,7 @@
 ## 解决思路：  
 
 * 第一次先请求某个网页，抓取到本地，假设文件名为 a.html。这时文件系统有个文件的修改时间。
-* 第二次访问网页，如果发现本地已经有了 a.html，则向服务器发送一个 If-Modified-Since 的请求（http://www.w3.org/Protocols/rfc2616/rfc2616*sec14.html）。 把 a.html 的修改时间写到请求里。
+* 第二次访问网页，如果发现本地已经有了 a.html，则向服务器发送一个 If-Modified-Since 的请求（http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html）。 把 a.html 的修改时间写到请求里。
 * 
 * 如果网页更新了，服务器会返回一个 200 的应答，这时就重新抓取网页，更新本地文件。
 * 
