@@ -194,7 +194,7 @@ commit tran";
                 else
                 {
                     var selectCmd = conn.CreateCommand();
-                    selectCmd.CommandText = "select top 1 Url from SuccessfulWeb where LastAccessTime <@v1 or LastAccessTime is null ORDER BY NEWID()";
+                    selectCmd.CommandText = "select top 1 Url from SuccessfulWeb with (nolock) where LastAccessTime <@v1 or LastAccessTime is null ORDER BY NEWID()";
                     selectCmd.Parameters.AddWithValue("@v1", DateTime.UtcNow.AddDays(-1));
                     using (var reader = selectCmd.ExecuteReader())
                     {

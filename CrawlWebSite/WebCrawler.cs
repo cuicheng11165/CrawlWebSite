@@ -78,7 +78,10 @@ namespace CrawlWebSite
                     }
                 }
 
-                this.container.AddSuccessfulUrl(newUrl, sb.ToString());
+                if (string.Equals(newUrl, url))
+                {
+                    this.container.AddSuccessfulUrl(newUrl, sb.ToString());
+                }
 
 
                 var anchors = doc.DocumentNode.SelectNodes("//a");
