@@ -16,7 +16,7 @@ namespace CrawlWebSite
     {
         CrawlerContainer container = new CrawlerContainer();
 
-        public void Fetch(string url, string encoding = "utf-8")
+        public void Fetch(string url, string encoding = "utf-8", int count = 0)
         {
             if (string.IsNullOrEmpty(url))
             {
@@ -50,9 +50,9 @@ namespace CrawlWebSite
                 HtmlDocument doc = new HtmlDocument();
                 doc.Load(reader, Encoding.GetEncoding(encoding));
 
-                if (doc.DeclaredEncoding != null && !string.Equals(doc.DeclaredEncoding.BodyName, Encoding.GetEncoding(encoding).BodyName))
+                if (doc.DeclaredEncoding != null && !string.Equals(doc.DeclaredEncoding.BodyName, Encoding.GetEncoding(encoding).BodyName) && count < 5)
                 {
-                    Fetch(url, doc.DeclaredEncoding.BodyName);
+                    Fetch(url, doc.DeclaredEncoding.BodyName, ++count);
                     return;
                 }
 
@@ -128,7 +128,7 @@ namespace CrawlWebSite
 
         internal void Start(string startUrl)
         {
-            Fetch(startUrl);
+            //Fetch(startUrl);
             Go();
         }
 
