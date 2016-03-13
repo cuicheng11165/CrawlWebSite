@@ -135,6 +135,21 @@ namespace CrawlWebSite
             Go();
         }
 
+        internal void Collect(string folder)
+        {
+            var files = Directory.GetFiles(folder);
+
+            foreach (var file in files)
+            {
+                HtmlDocument doc = new HtmlDocument();
+                doc.Load(file);
+
+                var title = doc.DocumentNode.SelectSingleNode("/html/head/title");
+
+
+            }
+        }
+
         public void Go()
         {
             while (true)
