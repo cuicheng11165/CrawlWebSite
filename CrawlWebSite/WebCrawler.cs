@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,6 +15,8 @@ namespace CrawlWebSite
 {
     class WebCrawler
     {
+    
+
         CrawlerContainer container = new CrawlerContainer();
 
         public void Fetch(string url, string encoding = "utf-8", int count = 0)
@@ -110,18 +113,6 @@ namespace CrawlWebSite
                     }
                 }
             }
-            //catch (WebException webex)
-            //{
-            //    if (webex.Response != null && ((System.Net.HttpWebResponse)webex.Response).StatusCode == HttpStatusCode.BadGateway)
-            //    {
-            //        System.Threading.Thread.Sleep(60000);
-            //        Fetch(url);
-            //    }
-            //    else
-            //    {
-            //        container.AddFailedUrl(url, webex.ToString());
-            //    }
-            //}
             catch (Exception e)
             {
                 container.AddFailedUrl(url, e.ToString());
@@ -131,8 +122,8 @@ namespace CrawlWebSite
 
         internal void Start(string startUrl)
         {
-            //Fetch(startUrl);
-            Go();
+            Fetch(startUrl);
+            //Go();
         }
 
         internal void Collect(string folder)
@@ -145,8 +136,6 @@ namespace CrawlWebSite
                 doc.Load(file);
 
                 var title = doc.DocumentNode.SelectSingleNode("/html/head/title");
-
-
             }
         }
 

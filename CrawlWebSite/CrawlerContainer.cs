@@ -11,6 +11,8 @@ namespace CrawlWebSite
 {
     class CrawlerContainer
     {
+        SpiderModel context = new SpiderModel();
+
         List<string> UrlQueue = new List<string>();
         private object queuesync = new object();
 
@@ -18,68 +20,54 @@ namespace CrawlWebSite
 
         public bool HasFailed(string url)
         {
-            return SqlHelper.TrySelectFromFailedWeb(url);
+            var find = context.Failed.FirstOrDefault(w => string.Equals(url, w.Url));
+            return find != null;
         }
 
-        internal bool EnsurePrimaryDomain(string newUrl)
-        {
-            return SqlHelper.HasSuccessfulDomain(newUrl);
-        }
+
 
         internal bool HasSucceed(string url)
         {
-            return SqlHelper.TrySelectFromSuccessfulWeb(url);
+            var find = context.Passed.FirstOrDefault(w => string.Equals(url, w.Url));
+            return find != null;
         }
         public void AddFailedUrl(string url, string errorMessage)
         {
             Console.WriteLine("Add Failed: {0}, {1}", url, errorMessage);
-            SqlHelper.InsertToFailedWeb(url, errorMessage);
+            context.Failed.Add(new Fail() { Url = url, ErrorMessage = errorMessage, AccessTime = DateTime.Now });
         }
 
         public void AddSuccessfulUrl(string url, string keyword)
         {
             Console.WriteLine("Add Successful: {0}", url);
-            SqlHelper.InserToSuccessfulWeb(url, keyword);
+            context.Passed.Add(new Pass() { Url = url, AccessTime = DateTime.Now });
         }
 
+        private Dictionary<string, WebPool> hosts = new Dictionary<string, WebPool>();
         public void Enqueue(string url)
         {
-            lock (queuesync)
-            {
-                if (!UrlQueue.Contains(url))
-                {
-                    UrlQueue.Add(url);
-                }
+            var host = UrlUtil.GetHost(url);
 
-                if (UrlQueue.Count > 5000)
-                {
-                    var insertCount = UrlQueue.Count / 2;
-                    Console.WriteLine("Insert {0} items into cache items", itemthresold);
-                    SqlHelper.InsertToCacheWeb(UrlQueue.Take(insertCount));
-                    UrlQueue.RemoveRange(0, insertCount);
-                }
+            var entity = context.WebPool.FirstOrDefault(w => w.Url == host);
+            if (entity != null)
+            {
+
             }
+
         }
 
         public string Dequeue()
         {
-            lock (queuesync)
-            {
-                string result;
-                if (UrlQueue.Count == 0)
-                {
-                    if (!SqlHelper.TryPopFromCacheWeb(out result))
-                    {
-                        Thread.Sleep(10000);
-                    }
-                }
-                else
-                {
-                    result = UrlQueue[UrlQueue.Count - 1];
-                    UrlQueue.RemoveAt(UrlQueue.Count - 1);
-                }
-                return result;
-            }
+            return null;
+        }
+    }
+
+
+    public class UrlUtil
+    {
+        public static string GetHost(string url)
+        {
+            return new Uri(url).Host;
         }
     }
 }
