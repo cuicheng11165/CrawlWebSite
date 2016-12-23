@@ -61,6 +61,8 @@
     <Compile Include="CrawlerContainer.cs" />
     <Compile Include="DataDispatcher.cs" />
     <Compile Include="LimitedConcurrencyLevelTaskScheduler.cs" />
+    <Compile Include="PathHelper.cs" />
+    <Compile Include="ResultWriter.cs" />
     <Compile Include="SpiderModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

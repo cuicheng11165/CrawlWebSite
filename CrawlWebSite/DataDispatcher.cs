@@ -11,13 +11,18 @@ namespace CrawlWebSite
 
         public void Run(string siteUrl)
         {
+            var siteUri = new Uri(siteUrl);
+
+            var outPutDir = PathHelper.GetPathFromHost(siteUri.Host);
+            if (!File.Exists(Path.Combine(outPutDir, "Description.txt")))
+            {
+                Run(string.Format("{0}://{1}", siteUri.Scheme, siteUri.Host));
+            }
 
             IEnumerable<string> result;
 
             WebDownload download = new WebDownload();
             result = download.Fetch(siteUrl);
-
-
 
 
             var uri = new Uri(siteUrl);

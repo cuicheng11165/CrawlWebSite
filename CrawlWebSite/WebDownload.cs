@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -9,9 +10,6 @@ namespace CrawlWebSite
 {
     class WebDownload
     {
-
-
-
         public IEnumerable<string> Fetch(string url)
         {
             SpiderModel context = new SpiderModel();
@@ -23,9 +21,8 @@ namespace CrawlWebSite
 
             var uriInstance = new Uri(url);
 
-            var newUrl = string.Format("{0}://{1}", uriInstance.Scheme, uriInstance.Host);
-            HtmlDocument doc = new HtmlDocument();
 
+            HtmlDocument doc = new HtmlDocument();
             try
             {
 
@@ -39,7 +36,7 @@ namespace CrawlWebSite
 
                 var reader = webclient.OpenRead(url);
 
-            
+
                 doc.Load(reader);
 
 
@@ -67,8 +64,12 @@ namespace CrawlWebSite
 
 
 
-                context.Passed.Add(new Pass() { AccessTime = DateTime.Now, Id = Guid.NewGuid(), Url = url, Keywords = sb.ToString() });
-                context.SaveChanges();
+                if (url.LastIndexOf("/", StringComparison.OrdinalIgnoreCase) < 8)
+                {
+                    var path = PathHelper.GetPathFromHost(url);
+                    File.AppendAllText(Path.Combine(path, "Description.txt"), sb.ToString());
+                }
+
             }
             catch (Exception e)
             {
