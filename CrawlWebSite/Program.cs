@@ -15,12 +15,12 @@ namespace CrawlWebSite
     {
         static void Main(string[] args)
         {
-            ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => true;         
+            ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => true;
 
             string starturl = "http://news.baidu.com/";
 
-            WebCrawler crawl = new WebCrawler();
-            crawl.Start(starturl);
+            DataDispatcher dispatcher = new DataDispatcher();
+            dispatcher.Run(starturl);
 
         }
     }

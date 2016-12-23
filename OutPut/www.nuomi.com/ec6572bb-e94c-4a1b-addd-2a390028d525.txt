@@ -1,0 +1,13 @@
+http://uxsurvey.baidu.com/index.php?sid=58946&newtest=Y&lang=zh-Hans
+https://passport.baidu.com/?logout
+http://i.baidu.com/?from=nuomi
+http://y.nuomi.com
+https://mct.y.nuomi.com/sc/pc/guide/guideFlow?page=true
+http://flight.baidu.com/flight/h5redirect?v=1.0&type=1&client=pcweb&app_from=bainuo&src_from=bainuo_pc_main
+http://api.kuai.baidu.com/cserver/train/redirectctrip?&u=http%253a%252f%252ftrains.ctrip.com%252f%253f%2526mkt_header%253dbdkx%2526allianceID%253d106175%2526sid%253d549977%0a&us=nuomi_pc
+http://waimai.baidu.com/?utm_source=bainuo&utm_medium=nav&utm_content=toububiaoqian&utm_term=default&utm_campaign=dalian&cid=PC_%E5%93%81%E7%89%8C%E6%8E%A8%E5%B9%BF_940766
+https://m.nuomi.com
+http://cooperation.nuomi.com/clue/index
+http://weibo.com/nuomiwang
+http://www.miitbeian.gov.cn
+http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11000002000001

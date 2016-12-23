@@ -1,0 +1,15 @@
+https://www.baidu.com/s?cl=3&amp;
+http://news.baidu.com/ns?cl=2&amp;rn=20&amp;tn=news&amp;
+http://zhidao.baidu.com/q?ct=17&amp;pn=0&amp;tn=ikaslist&amp;rn=10&amp;
+http://music.baidu.com/search?fr=tieba&
+http://image.baidu.com/i?tn=baiduimage&amp;ct=201326592&amp;lm=-1&amp;cl=2&amp;ie=gbk&amp;
+http://v.baidu.com/v?ct=301989888&amp;rn=20&amp;pn=0&amp;db=0&amp;s=21&amp;
+http://map.baidu.com/m?fr=map006&amp;
+http://wenku.baidu.com/search?fr=tieba&lm=0&od=0&
+http://wanba.baidu.com/login_game_by_post.xhtml?id=150&client=&inviteMsg=&serverId=S1&toolbarHide=
+http://wanba.baidu.com/login_game_by_post.xhtml?id=150&client=&inviteMsg=&serverId=S1&toolbarHide=
+http://v.tieba.baidu.com/
+http://www.baidu.com/duty/
+http://tb1.bdstatic.com/tb/eula.html
+http://net.china.cn/chinese/index.htm
+http://www.bj.cyberpolice.cn/index.htm
