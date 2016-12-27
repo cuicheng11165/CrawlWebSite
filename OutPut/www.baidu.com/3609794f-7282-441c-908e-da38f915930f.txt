@@ -1,2 +1,0 @@
-http://help.baidu.com
-https://passport.baidu.com/v2/?reg&tpl=service_feedback&u=
