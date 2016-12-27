@@ -10,15 +10,11 @@ namespace CrawlWebSite
 {
     class WebDownload
     {
-        public IEnumerable<string> Fetch(string url)
-        {
-            SpiderModel context = new SpiderModel();
-            var find = context.Passed.FirstOrDefault(f => f.Url == url);
-            if (find != null)
-            {
-                yield break;
-            }
+        MongoConn conn = new MongoConn();
 
+        public void Fetch(string url)
+        {
+            url = url.TrimEnd('/');
             var uriInstance = new Uri(url);
 
 
@@ -62,18 +58,16 @@ namespace CrawlWebSite
                     }
                 }
 
-
-
                 if (url.LastIndexOf("/", StringComparison.OrdinalIgnoreCase) < 8)
                 {
-                    var path = PathHelper.GetPathFromHost(url);
-                    File.AppendAllText(Path.Combine(path, "Description.txt"), sb.ToString());
+                    conn.UpsertUrl(uriInstance.Host, sb.ToString());
                 }
 
+                conn.UpsertUrlToHost(uriInstance.Host, url, 1);
             }
             catch (Exception e)
             {
-                yield break;
+                conn.UpsertUrlToHost(uriInstance.Host, url, 2);
             }
 
             var anchors = doc.DocumentNode.SelectNodes("//a");
@@ -92,9 +86,14 @@ namespace CrawlWebSite
                     {
                         continue;
                     }
-
-                    yield return href;
-
+                    try
+                    {
+                        var hrefUri = new Uri(href);
+                        conn.UpsertUrlToHost(hrefUri.Host, href.TrimEnd('/'), 0);
+                    }
+                    catch (Exception e)
+                    {
+                    }
                 }
             }
 
