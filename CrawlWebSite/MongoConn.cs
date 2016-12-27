@@ -23,6 +23,7 @@ namespace CrawlWebSite
 
         public void UpsertUrlToHost(string tableName, string url, int value)
         {
+            Console.WriteLine("Add url to host: {0}", url);
             var collection = database.GetCollection<BsonDocument>(tableName);
             var builder = Builders<BsonDocument>.Filter;
             var filter = builder.Eq("url", url);
@@ -57,6 +58,7 @@ namespace CrawlWebSite
 
         public string PopUrl(string tableName)
         {
+            Console.WriteLine("Pop url: {0}", tableName);
             var collection = database.GetCollection<BsonDocument>(tableName);
             var document = collection.FindOneAndDelete<BsonDocument>(Builders<BsonDocument>.Filter.Empty);
             return document.GetValue("Url").AsString;
