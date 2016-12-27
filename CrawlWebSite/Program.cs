@@ -23,7 +23,6 @@ namespace CrawlWebSite
             MongoConn conn = new MongoConn();
 
             DataDispatcher dispatcher = new DataDispatcher();
-            dispatcher.Run(starturl);
             while (true)
             {
                 var tables = conn.MoveNextTable();

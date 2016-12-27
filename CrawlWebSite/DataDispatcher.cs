@@ -11,6 +11,7 @@ namespace CrawlWebSite
         WebDownload download = new WebDownload();
         public void Run(string siteUrl)
         {
+
             download.Fetch(siteUrl);
         }
     }

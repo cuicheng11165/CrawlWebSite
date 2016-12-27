@@ -63,7 +63,7 @@ namespace CrawlWebSite
                     conn.UpsertUrl(uriInstance.Host, sb.ToString());
                 }
 
-                conn.UpsertUrlToHost(uriInstance.Host, url, 1);
+                //conn.UpsertUrlToHost(uriInstance.Host, url, 1);
             }
             catch (Exception e)
             {
