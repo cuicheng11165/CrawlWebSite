@@ -14,8 +14,22 @@ namespace CrawlWebSite
 
         public void Fetch(string url)
         {
+
+
             url = url.TrimEnd('/');
             var uriInstance = new Uri(url);
+
+            var hasDescription = conn.HasDescription(uriInstance.Host);
+            var isRoot = url.LastIndexOf("/", StringComparison.OrdinalIgnoreCase) < 8;
+            if (!hasDescription && !isRoot)
+            {
+                conn.UpsertUrlToHost(uriInstance.Host, url, 1);
+                Fetch(string.Format("{0}://{1}", uriInstance.Scheme, uriInstance.Host));
+            }
+            if (hasDescription && isRoot)
+            {
+                return;
+            }
 
 
             HtmlDocument doc = new HtmlDocument();

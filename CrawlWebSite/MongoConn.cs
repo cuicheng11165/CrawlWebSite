@@ -21,6 +21,18 @@ namespace CrawlWebSite
             database = client.GetDatabase("spider");
         }
 
+        internal bool HasDescription(string host)
+        {
+            var coll = database.GetCollection<BsonDocument>("UrlSummary");
+            var document = coll.FindSync(Builders<BsonDocument>.Filter.Eq("url", host));
+            while (document != null && document.MoveNext())
+            {
+                var res = document.Current.Count();
+                return res > 0;
+            }
+            return false;
+        }
+
         public void UpsertUrlToHost(string tableName, string url, int value)
         {
             Console.WriteLine("Add url to host: {0}", url);
