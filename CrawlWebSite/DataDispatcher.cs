@@ -8,7 +8,7 @@ namespace CrawlWebSite
 {
     class DataDispatcher
     {
-        static readonly LimitedConcurrencyLevelTaskScheduler scheduler = new LimitedConcurrencyLevelTaskScheduler(5);
+        static readonly List<Task> lists = new List<Task>();
 
         WebDownload download = new WebDownload();
         public void Run(string siteUrl)
@@ -17,7 +17,18 @@ namespace CrawlWebSite
               {
                   download.Fetch(siteUrl);
               });
-            newTask.RunSynchronously(scheduler);
+            if (lists.Count < 10)
+            {
+                lists.Add(newTask);
+                newTask.RunSynchronously();
+            }
+            else
+            {
+                var index = Task.WaitAny(lists.ToArray());
+                lists.RemoveAt(index);
+                lists.Add(newTask);
+                newTask.RunSynchronously();
+            }
         }
     }
 }

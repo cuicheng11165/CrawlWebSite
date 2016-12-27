@@ -65,7 +65,9 @@ namespace CrawlWebSite
             {
                 return null;
             }
-            return document.GetValue("url").AsString;
+            var res = document.GetValue("url").AsString;
+            Console.WriteLine("Crawling " + res);
+            return res;
         }
 
         public string PopUrl(string tableName)

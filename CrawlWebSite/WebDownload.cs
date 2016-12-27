@@ -36,16 +36,28 @@ namespace CrawlWebSite
             try
             {
 
-                WebClient webclient = new WebClient();
-                webclient.Encoding = Encoding.UTF8;
-                webclient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0");
-                webclient.Headers.Add("Accept", "text/html, application/xhtml+xml, */*");
+                var webclient = HttpWebRequest.CreateHttp(uriInstance);
+                webclient.Accept = "text/html";
+                webclient.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0";
+                webclient.Host = uriInstance.Host;
+
+                //webclient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0");
+                //webclient.Headers.Add("Accept", "text/html, application/xhtml+xml, */*");
                 //webclient.Headers.Add("Accept-Encoding", "gzip, deflate");
-                webclient.Headers.Add("Host", uriInstance.Host);
+                //webclient.Headers.Add("Host", uriInstance.Host);
                 webclient.Headers.Add("Accept-Language", "zh-Hans-CN,zh-Hans;q=0.8,en-US;q=0.5,en;q=0.3");
 
-                var reader = webclient.OpenRead(url);
+                var response = webclient.GetResponse();
 
+                var contentType = response.ContentType;
+
+                if (contentType.IndexOf("text/html") < 0)
+                {
+                    conn.UpsertUrlToHost(uriInstance.Host, url, 2);
+                    return;
+                }
+
+                var reader = response.GetResponseStream();
 
                 doc.Load(reader);
 
