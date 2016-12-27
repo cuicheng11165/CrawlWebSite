@@ -8,11 +8,16 @@ namespace CrawlWebSite
 {
     class DataDispatcher
     {
+        static readonly LimitedConcurrencyLevelTaskScheduler scheduler = new LimitedConcurrencyLevelTaskScheduler(5);
+
         WebDownload download = new WebDownload();
         public void Run(string siteUrl)
         {
-
-            download.Fetch(siteUrl);
+            var newTask = new Task(() =>
+              {
+                  download.Fetch(siteUrl);
+              });
+            newTask.RunSynchronously(scheduler);
         }
     }
 }
