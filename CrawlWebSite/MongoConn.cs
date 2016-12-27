@@ -21,12 +21,29 @@ namespace CrawlWebSite
             database = client.GetDatabase("spider");
         }
 
+        internal bool HasDescription(string host)
+        {
+            var coll = database.GetCollection<BsonDocument>("UrlSummary");
+            var document = coll.FindSync(Builders<BsonDocument>.Filter.Eq("host", host));
+            while (document != null && document.MoveNext())
+            {
+                var res = document.Current.Count();
+                return res > 0;
+            }
+            return false;
+        }
+
         public void UpsertUrlToHost(string tableName, string url, int value)
         {
-            Console.WriteLine("Add url to host: {0}", url);
+            //Console.WriteLine("Add url to host: {0}", url);
             var collection = database.GetCollection<BsonDocument>(tableName);
             var builder = Builders<BsonDocument>.Filter;
             var filter = builder.Eq("url", url);
+            var findValue = collection.FindSync(filter);
+            if (findValue != null && findValue.MoveNext() && findValue.Current.Count() > 0)
+            {
+                return;
+            }
             var update = Builders<BsonDocument>.Update.Set("value", value);
             collection.UpdateOne(filter, update, new UpdateOptions() { IsUpsert = true });
         }
@@ -53,9 +70,9 @@ namespace CrawlWebSite
             {
                 return null;
             }
-            var result = document.GetValue("url").AsString;
-            Console.WriteLine("PopUp {0}", result);
-            return result;
+            var res = document.GetValue("url").AsString;
+            //Console.WriteLine("Crawling " + res);
+            return res;
         }
 
         public string PopUrl(string tableName)
@@ -71,7 +88,7 @@ namespace CrawlWebSite
             var collection = database.GetCollection<BsonDocument>("UrlSummary");
             var builder = Builders<BsonDocument>.Filter;
             var filter = builder.Eq("host", host);
-            var update = Builders<BsonDocument>.Update.Set("host", host).Set("description", description);
+            var update = Builders<BsonDocument>.Update.Set("description", description);
 
             collection.UpdateOne(filter, update, new UpdateOptions() { IsUpsert = true });
         }
