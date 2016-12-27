@@ -24,7 +24,9 @@ namespace CrawlWebSite
         internal bool HasDescription(string host)
         {
             var coll = database.GetCollection<BsonDocument>("UrlSummary");
+ 
             var document = coll.FindSync(Builders<BsonDocument>.Filter.Eq("host", host));
+ 
             while (document != null && document.MoveNext())
             {
                 var res = document.Current.Count();
@@ -71,7 +73,7 @@ namespace CrawlWebSite
                 return null;
             }
             var res = document.GetValue("url").AsString;
-            //Console.WriteLine("Crawling " + res);
+ 
             return res;
         }
 
