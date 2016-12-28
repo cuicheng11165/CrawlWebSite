@@ -14,9 +14,9 @@ namespace CrawlWebSite
         public void Run(string siteUrl)
         {
             var newTask = new Task(() =>
-              {
-                  download.Fetch(siteUrl);
-              });
+            {
+                download.Fetch(siteUrl);
+            });
             if (lists.Count < 10)
             {
                 lists.Add(newTask);

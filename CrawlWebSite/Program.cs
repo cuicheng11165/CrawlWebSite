@@ -25,16 +25,16 @@ namespace CrawlWebSite
             DataDispatcher dispatcher = new DataDispatcher();
             //dispatcher.Run(starturl);
 
-
             while (true)
             {
                 var tables = conn.MoveNextTable();
                 foreach (var tableName in tables)
                 {
-                    var record = conn.MoveNextRecord(tableName);
-                    if (record != null)
+                    string record = conn.MoveNextRecord(tableName);
+                    while (record != null)
                     {
                         dispatcher.Run(record);
+                        record = conn.MoveNextRecord(tableName);
                     }
                 }
             }
