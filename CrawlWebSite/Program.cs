@@ -15,23 +15,30 @@ namespace CrawlWebSite
     {
         static void Main(string[] args)
         {
-
             ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => true;
 
-            string starturl = "http://news.baidu.com/";
+            string starturl = "http://www.ithome.com";
 
             MongoConn conn = new MongoConn();
 
+
+            MongoConn.TableNames = new HashSet<string>(conn.MoveNextTable());
+
             DataDispatcher dispatcher = new DataDispatcher();
-            //dispatcher.Run(starturl);
+            dispatcher.Run(starturl);
 
             while (true)
             {
-                var tables = conn.MoveNextTable();
-                foreach (var tableName in tables)
+
+                foreach (var tableName in MongoConn.TableNames)
                 {
+                    if (tableName == "WebSite")
+                    {
+                        continue;
+                    }
                     string record = conn.MoveNextRecord(tableName);
-                    while (record != null)
+                    //string record = conn.MoveNextDescription();
+                    if (!string.IsNullOrEmpty(record))
                     {
                         dispatcher.Run(record);
                         record = conn.MoveNextRecord(tableName);

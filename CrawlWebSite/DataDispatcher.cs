@@ -17,17 +17,19 @@ namespace CrawlWebSite
             {
                 download.Fetch(siteUrl);
             });
-            if (lists.Count < 10)
+            if (lists.Count < 20)
             {
                 lists.Add(newTask);
-                newTask.RunSynchronously();
+                newTask.Start();
+                //newTask.RunSynchronously();
             }
             else
             {
                 var index = Task.WaitAny(lists.ToArray());
                 lists.RemoveAt(index);
                 lists.Add(newTask);
-                newTask.RunSynchronously();
+                newTask.Start();
+                //newTask.RunSynchronously();
             }
         }
     }
